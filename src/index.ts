@@ -54,7 +54,7 @@ async function dailyReport() {
   const weeklyChange = change(last7DaysPrev, last7Days);
   const monthlyChange = change(last30DayPrev, last30Day);
   slack.note({
-    text: `*QA's :bug: Report*.
+    text: `*QA's :bug: Report (${GH_REPO})*.
 
 Reported bugs in range (+/- previous period):
 - 1 day: ${daily.data.total_count} (${dailyChange})
