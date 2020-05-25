@@ -1,8 +1,7 @@
-import * as fs from 'fs';
 import { Octokit } from '@octokit/rest';
-import * as Slack from 'slack-notify';
 import * as dotenv from 'dotenv';
 import * as moment from 'moment';
+import * as Slack from 'slack-notify';
 
 dotenv.config();
 
