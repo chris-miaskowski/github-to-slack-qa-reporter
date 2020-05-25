@@ -18,6 +18,7 @@
   "homepage": "https://github.com/chris-miaskowski/github-to-slack-qa-reporter#readme",
   "devDependencies": {
     "@octokit/rest": "^17.9.2",
+    "slack-notify": "^0.1.7",
     "ts-node": "^8.10.1",
     "typescript": "^3.9.3"
   }
