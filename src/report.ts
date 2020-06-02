@@ -1,30 +1,25 @@
 import { Octokit } from '@octokit/rest';
-import * as dotenv from 'dotenv';
 import * as moment from 'moment';
 import * as Slack from 'slack-notify';
 
-dotenv.config();
+export async function dailyReport(options: { ghToken: string; ghRepo: string; slackWebhook: string }) {
+  // https://octokit.github.io/
+  const octokit = new Octokit({
+    auth: options.ghToken,
+    userAgent: 'gh2slack${label}reporter v0.0.0',
+    previews: ['jean-grey'],
+    timeZone: 'Europe/Warsaw',
+    baseUrl: 'https://api.github.com',
+    log: {
+      debug: () => {},
+      info: () => {},
+      warn: console.warn,
+      error: console.error
+    },
+  });
 
-const { GH_TOKEN, GH_REPO, SLACK_WEBHOOK } = process.env;
+  const slack = Slack(options.slackWebhook);
 
-// https://octokit.github.io/
-const octokit = new Octokit({
-  auth: GH_TOKEN,
-  userAgent: 'gh2slack${label}reporter v0.0.0',
-  previews: ['jean-grey'],
-  timeZone: 'Europe/Warsaw',
-  baseUrl: 'https://api.github.com',
-  log: {
-    debug: () => {},
-    info: () => {},
-    warn: console.warn,
-    error: console.error
-  },
-});
-
-const slack = Slack(SLACK_WEBHOOK);
-
-export async function dailyReport() {
   const FORMAT = 'YYYY-MM-DD';
   const yesterday = moment().subtract(1, 'days').format(FORMAT);
   const ago2Days = moment().subtract(2, 'days').format(FORMAT);
@@ -36,7 +31,7 @@ export async function dailyReport() {
   const label = 't/bug';
 
   async function queryGH(from, to) {
-    const q = `repo:${GH_REPO}+label:${label}+type:issue+created:${from}..${to}`;
+    const q = `repo:${options.ghRepo}+label:${label}+type:issue+created:${from}..${to}`;
     console.log('Query', q);
     return octokit.search.issuesAndPullRequests({ q });
   }
@@ -54,7 +49,7 @@ export async function dailyReport() {
   const weeklyChange = change(last7DaysPrev, last7Days);
   const monthlyChange = change(last30DayPrev, last30Day);
   slack.note({
-    text: `*QA's :bug: Report (${GH_REPO})*.
+    text: `*QA's :bug: Report (${options.ghRepo})*.
 
 Reported bugs in range (+/- previous period):
 - 1 day: ${daily.data.total_count} (${dailyChange})
