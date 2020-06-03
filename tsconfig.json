@@ -1,0 +1,24 @@
+{
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+      "moduleResolution": "node",
+      "target": "es6",
+      "module": "commonjs",
+      "lib": ["es2017"],
+      "strict": true,
+      "pretty": true,
+      "noFallthroughCasesInSwitch": true,
+      "allowUnreachableCode": false,
+      "forceConsistentCasingInFileNames": true,
+      "noImplicitThis": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "suppressImplicitAnyIndexErrors": true,
+      "noUnusedLocals": true,
+      "resolveJsonModule": true,
+      "outDir": "dist",
+      "skipLibCheck": true,
+      "importHelpers": true
+  }
+}

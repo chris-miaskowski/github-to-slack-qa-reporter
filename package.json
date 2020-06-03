@@ -1,27 +1,30 @@
 {
   "name": "github-to-slack-qa-reporter",
   "version": "1.0.0",
-  "description": "",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node scripts/index.ts",
+    "build": "tsc -b"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chris-miaskowski/github-to-slack-qa-reporter.git"
   },
-  "author": "",
+  "author": "Chris Miaskowski",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/chris-miaskowski/github-to-slack-qa-reporter/issues"
   },
   "type:": "module",
   "homepage": "https://github.com/chris-miaskowski/github-to-slack-qa-reporter#readme",
-  "devDependencies": {
+  "dependencies": {
     "@octokit/rest": "^17.9.2",
     "dotenv": "^8.2.0",
     "moment": "^2.26.0",
-    "slack-notify": "^0.1.7",
+    "slack-notify": "^0.1.7"
+  },
+  "devDependencies": {
     "ts-node": "^8.10.1",
+    "tslib": "^2.0.0",
     "typescript": "^3.9.3"
   }
 }
