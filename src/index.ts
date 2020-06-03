@@ -61,7 +61,7 @@ export async function dailyReport(options: { ghToken: string; ghRepo: string; sl
           text: `_We compare this month (${firstDayOfThisMonth} - ${today}) to the entire previous month (${firstDayOfPrevMonth} - ${lastDayOfPrevMonth})._`
         }
       },
-      sections.map(section => {
+      ...sections.map(section => {
         return {
           type: 'section',
           text: {
