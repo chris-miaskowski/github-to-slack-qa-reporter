@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "scripts": {
     "start": "ts-node scripts/index.ts",
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "prepublish": "yarn build"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chris-miaskowski/github-to-slack-qa-reporter.git"

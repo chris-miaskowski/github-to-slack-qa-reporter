@@ -1,6 +1,6 @@
 {
   "include": ["src"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
       "moduleResolution": "node",
       "target": "es6",
@@ -19,6 +19,7 @@
       "resolveJsonModule": true,
       "outDir": "dist",
       "skipLibCheck": true,
-      "importHelpers": true
+      "importHelpers": true,
+      "declaration": true
   }
 }
