@@ -18,7 +18,6 @@
       "noUnusedLocals": true,
       "resolveJsonModule": true,
       "outDir": "dist",
-      "skipLibCheck": true,
       "importHelpers": true,
       "declaration": true
   }
