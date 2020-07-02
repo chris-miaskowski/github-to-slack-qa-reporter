@@ -9,7 +9,9 @@ const firstDayOfThisWeek = moment().subtract(6, 'days').format(FORMAT);
 const firstDayOfPrevWeek = moment().subtract(13, 'days').format(FORMAT);
 const lastDayOfPrevWeek = moment().subtract(7, 'days').format(FORMAT);
 
-export async function dailyReport(options: { ghToken: string; ghRepo: string; slackWebhook: string }, bugLabel: string, sections: string[][]) {
+type Icons = { good: string; bad: string; neutral: string } | undefined;
+
+export async function dailyReport(options: { ghToken: string; ghRepo: string; slackWebhook: string, icons: Icons }, bugLabel: string, sections: string[][]) {
   // https://octokit.github.io/
   const octokit = new Octokit({
     auth: options.ghToken,
@@ -95,7 +97,7 @@ export async function dailyReport(options: { ghToken: string; ghRepo: string; sl
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `_We compare this week (${firstDayOfThisWeek} - ${today}) to previous week (${firstDayOfPrevWeek} - ${lastDayOfPrevWeek})._`
+          text: `_We compare previous week (${firstDayOfPrevWeek} - ${lastDayOfPrevWeek}) to this week (${firstDayOfThisWeek} - ${today})._`
         }
       },
       ...sections.map(section => {
@@ -103,7 +105,7 @@ export async function dailyReport(options: { ghToken: string; ghRepo: string; sl
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: weeklyStats(options.ghRepo, section, createdThisWeek, createdLastWeek, closedThisWeek, closedLastWeek, openedAndClosedThisWeek, openedAndClosedLastWeek, backlogThisWeek, backlogLastWeek)
+            text: weeklyStats(options.ghRepo, section, createdThisWeek, createdLastWeek, closedThisWeek, closedLastWeek, openedAndClosedThisWeek, openedAndClosedLastWeek, backlogThisWeek, backlogLastWeek, options.icons)
           }
         };
       })
@@ -111,7 +113,7 @@ export async function dailyReport(options: { ghToken: string; ghRepo: string; sl
   });
 }
 
-function weeklyStats(repo: string, requestedLabels: string[], createdIssuesThis: any[], createdIssuesLast: any[], closedIssuesThis: any[], closedIssuesLast: any[], openedAndClosedThis: any[], openedAndClosedLast: any[], backlogThis: any[], backlogLast: any[]) {
+function weeklyStats(repo: string, requestedLabels: string[], createdIssuesThis: any[], createdIssuesLast: any[], closedIssuesThis: any[], closedIssuesLast: any[], openedAndClosedThis: any[], openedAndClosedLast: any[], backlogThis: any[], backlogLast: any[], icons: Icons) {
   const totalThisWeek = createdIssuesThis.filter(item => requestedLabels.every(requestedLabel => item.labels.map((l: any) => l.name).includes(requestedLabel)));
   const totalLastWeek = createdIssuesLast.filter(item => requestedLabels.every(requestedLabel => item.labels.map((l: any) => l.name).includes(requestedLabel)));
   const closedThisWeek = closedIssuesThis.filter(item => requestedLabels.every(requestedLabel => item.labels.map((l: any) => l.name).includes(requestedLabel)));
@@ -124,14 +126,41 @@ function weeklyStats(repo: string, requestedLabels: string[], createdIssuesThis:
 
   return `*\`${requestedLabels.join(' ')}\` issues:*
 
-  ${indicatorIcon(totalThisWeek, totalLastWeek)} created: <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfThisWeek}..${today}|${totalThisWeek.length}> vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}|${totalLastWeek.length}>
-  ${indicatorIcon(openedAndClosedThisWeek, openedAndClosedLastWeek)} turnover: <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfThisWeek}..${today}+closed:${firstDayOfThisWeek}..${today}|${openedAndClosedThisWeek.length}> vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}+closed:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}|${openedAndClosedLastWeek.length}>
-  ${indicatorIcon(closedThisWeek, closedLastWeek)} closed (total): <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+closed:${firstDayOfThisWeek}..${today}|${closedThisWeek.length}>  vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+closed:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}|${closedLastWeek.length}>
-  ${indicatorIcon(backlogThisWeek, backlogLastWeek)} backlog: <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+is:open+created:%3C${today}|${backlogThisWeek.length}> vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+is:open+created:%3C${lastDayOfPrevWeek}|${backlogLastWeek.length}>`
+  ${createdBugsStats(totalLastWeek, totalThisWeek, repo, requestedLabels, icons)}
+  ${turnoverStats(openedAndClosedLastWeek, openedAndClosedThisWeek, repo, requestedLabels, icons)}
+  ${closedTotal(closedLastWeek, closedThisWeek, repo, requestedLabels, icons)}
+  ${backlog(backlogLastWeek, backlogThisWeek, repo, requestedLabels, icons)}`
 }
 
-function indicatorIcon(current: any, previous: any) {
-  if (current.length > previous.length) {return ':sort-up:'} else if (current.length < previous.length) {return ':sort-down:'} else {return ':sort-equal:'} 
+function backlog(sourcePeriod: any, targetPeriod: any, repo: string, requestedLabels: string[], icons: Icons) {
+  return `${indicatorIcon(sourcePeriod, targetPeriod, icons)} backlog: <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+is:open+created:%3C${today}|${sourcePeriod.length}> vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+is:open+created:%3C${lastDayOfPrevWeek}|${targetPeriod.length}>`
+}
+
+function createdBugsStats(sourcePeriod: any, targetPeriod: any, repo: string, requestedLabels: string[], icons: Icons) {
+  return `${indicatorIcon(sourcePeriod, targetPeriod, icons)} created: <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfThisWeek}..${today}|${sourcePeriod.length}> vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}|${targetPeriod.length}>`;
+}
+
+function turnoverStats(sourcePeriod: any, targetPeriod: any, repo: string, requestedLabels: string[], icons: Icons) {
+  return `${indicatorIcon(sourcePeriod, targetPeriod, icons)} turnover: <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfThisWeek}..${today}+closed:${firstDayOfThisWeek}..${today}|${sourcePeriod.length}> vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+created:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}+closed:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}|${targetPeriod.length}>`;
+}
+
+function closedTotal(sourcePeriod: any, targetPeriod: any, repo: string, requestedLabels: string[], icons: Icons) {
+  return `${indicatorIcon(sourcePeriod, targetPeriod, icons)} closed (total): <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+closed:${firstDayOfThisWeek}..${today}|${sourcePeriod.length}>  vs. <https://github.com/${repo}/issues?q=is:issue+${generateLabelFilter(requestedLabels)}+closed:${firstDayOfPrevWeek}..${lastDayOfPrevWeek}|${targetPeriod.length}>`;
+}
+
+function indicatorIcon(current: any, previous: any, icons: Icons) {
+  const i = icons || { 
+    good: ':thumbsup:',
+    bad: ':thumbsdown:',
+    neutral: ':scales:',
+  };
+  if (current.length > previous.length) {
+    return i.good;
+  } else if (current.length < previous.length) {
+    return i.bad;
+  } else {
+    return i.neutral;
+  } 
 }
 
 function generateLabelFilter(labels: string[]) {

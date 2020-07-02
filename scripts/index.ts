@@ -10,6 +10,7 @@ dailyReport({
   ghRepo: GH_REPO!,
   ghToken: GH_TOKEN!,
   slackWebhook: SLACK_WEBHOOK!,
+  icons: undefined,
 }, bug, [
   [bug],
   [bug, 'cs/reported'],
