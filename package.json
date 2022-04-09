@@ -22,7 +22,7 @@
   "dependencies": {
     "@octokit/rest": "^17.9.2",
     "dotenv": "^8.2.0",
-    "moment": "^2.26.0",
+    "moment": "^2.29.2",
     "slack-notify": "^0.1.7",
     "tslib": "^2.0.0"
   },
